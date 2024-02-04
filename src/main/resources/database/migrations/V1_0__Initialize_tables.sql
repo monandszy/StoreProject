@@ -1,3 +1,5 @@
+CREATE SCHEMA zajavka_store;
+
 CREATE TABLE zajavka_store.customer
 (
     id            SERIAL PRIMARY KEY NOT NULL,

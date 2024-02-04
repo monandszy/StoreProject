@@ -5,13 +5,17 @@ import code.domain.Opinion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -21,6 +25,8 @@ public class OpinionRepository implements OpinionDAO {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final Map<Integer, Opinion> loadedOpinions = new TreeMap<>();
+   private final ProductRepository productRepository;
+   private final CustomerRepository customerRepository;
 
       /*id              SERIAL PRIMARY KEY       NOT NULL,
     customer_id     INT                      NOT NULL,
@@ -31,17 +37,33 @@ public class OpinionRepository implements OpinionDAO {
 
    @Override
    public Integer add(Opinion opinion) {
-      return null;
+      if (Objects.nonNull(opinion.getId()))
+         throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
+      SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(simpleDriverDataSource);
+      simpleJdbcInsert.setTableName("opinion");
+      simpleJdbcInsert.setGeneratedKeyName("id");
+      simpleJdbcInsert.setSchemaName("zajavka_store");
+      MapSqlParameterSource params = new MapSqlParameterSource()
+              .addValue("customer_id", opinion.getCustomer().getId())
+              .addValue("product_id", opinion.getProduct().getId())
+              .addValue("stars", opinion.getStars())
+              .addValue("time_of_comment", opinion.getTimeOfComment());
+      return (Integer) simpleJdbcInsert.executeAndReturnKey(params);
 
    }
 
    @Override
    public Optional<Opinion> get(Integer id) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      BeanPropertyRowMapper<Opinion> producerBeanPropertyRowMapper
-              = BeanPropertyRowMapper.newInstance(Opinion.class);
-      String sql = "SELECT FROM producer WHERE id = ?";
-      List<Opinion> result = jdbcTemplate.query(sql, producerBeanPropertyRowMapper, id);
+      RowMapper<Opinion> opinionRowMapper =(rs, rowNum) ->  Opinion.builder()
+              .id(rs.getInt("id"))
+              .product(productRepository.get(rs.getInt("product_id")).orElseThrow())
+              .customer(customerRepository.get(rs.getInt("customer_id")).orElseThrow())
+              .stars(rs.getInt("stars"))
+              .timeOfComment(rs.getObject("time_of_comment", OffsetDateTime.class))
+              .build();
+      String sql = "SELECT * FROM zajavka_store.producer WHERE id = ?";
+      List<Opinion> result = jdbcTemplate.query(sql, opinionRowMapper, id);
 
       Optional<Opinion> any = result.stream().findAny();
       if (any.isPresent()) {
@@ -52,7 +74,8 @@ public class OpinionRepository implements OpinionDAO {
             if (existingOpinion.equals(loadedOpinion)) {
                return Optional.of(existingOpinion);
             } else {
-               throw new RuntimeException("This object is already loaded and has been modified, update database before fetching");
+               throw new RuntimeException("This object is already loaded " +
+                       "and has been modified, update database before fetching");
             }
          } else {
             loadedOpinions.put(loadedId, loadedOpinion);
@@ -63,7 +86,8 @@ public class OpinionRepository implements OpinionDAO {
    @Override
    public Opinion update(Integer opinionId, String[] params) {
       NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(simpleDriverDataSource);
-      String sql = "UPDATE opinion SET customer_id = :customerId, product_id = :productId, stars = :stars, time_of_comment = :timeOfComment WHERE id = :id";
+      String sql = "UPDATE zajavka_store.opinion SET customer_id = :customerId, product_id = :productId, " +
+              "stars = :stars, time_of_comment = :timeOfComment WHERE id = :id";
       MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource()
               .addValue("customerId", params[0])
               .addValue("productId", params[1])
@@ -78,7 +102,7 @@ public class OpinionRepository implements OpinionDAO {
    @Override
    public void delete(Integer opinionId) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "DELETE FROM opinion WHERE id = ?";
+      String sql = "DELETE FROM zajavka_store.opinion WHERE id = ?";
       jdbcTemplate.update(sql, opinionId);
       loadedOpinions.remove(opinionId);
    }

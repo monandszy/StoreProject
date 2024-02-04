@@ -1,10 +1,13 @@
 package code.infrastructure.database.repository;
 
 import code.business.dao.ProducerDAO;
+import code.domain.Customer;
 import code.domain.Producer;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -30,6 +33,7 @@ public class ProducerRepository implements ProducerDAO {
       SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(simpleDriverDataSource);
       simpleJdbcInsert.setTableName("producer");
       simpleJdbcInsert.setGeneratedKeyName("id");
+      simpleJdbcInsert.setSchemaName("zajavka_store");
       BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(producer);
       return (Integer) simpleJdbcInsert.executeAndReturnKey(parameterSource);
    }
@@ -37,10 +41,13 @@ public class ProducerRepository implements ProducerDAO {
    @Override
    public Optional<Producer> get(Integer id) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      BeanPropertyRowMapper<Producer> producerBeanPropertyRowMapper
-              = BeanPropertyRowMapper.newInstance(Producer.class);
-      String sql = "SELECT FROM producer WHERE id = ?";
-      List<Producer> result = jdbcTemplate.query(sql, producerBeanPropertyRowMapper, id);
+      RowMapper<Producer> producerRowMapper = (resultSet, rowNum) -> Producer.builder()
+              .id(resultSet.getInt("id"))
+              .name(resultSet.getString("name"))
+              .address(resultSet.getString("address"))
+              .build();
+      String sql = "SELECT * FROM zajavka_store.producer WHERE id = ?";
+      List<Producer> result = jdbcTemplate.query(sql, producerRowMapper, id);
 
       Optional<Producer> any = result.stream().findAny();
       if (any.isPresent()) {
@@ -63,7 +70,7 @@ public class ProducerRepository implements ProducerDAO {
    @Override
    public Producer update(Integer producerId, String[] params) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "UPDATE producer SET name = ?, address = ?  WHERE id = ?";
+      String sql = "UPDATE zajavka_store.producer SET name = ?, address = ?  WHERE id = ?";
       jdbcTemplate.update(sql, params[0], params[1], producerId);
       loadedProducers.remove(producerId);
       return get(producerId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
@@ -72,7 +79,7 @@ public class ProducerRepository implements ProducerDAO {
    @Override
    public void delete(Integer producerId) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "DELETE FROM producer WHERE id = ?";
+      String sql = "DELETE FROM zajavka_store.producer WHERE id = ?";
       jdbcTemplate.update(sql, producerId);
       loadedProducers.remove(producerId);
 

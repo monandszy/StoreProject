@@ -6,6 +6,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.With;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 
 @Value
@@ -18,7 +19,7 @@ public class Purchase {
    Customer customer;
    Product product;
    int quantity;
-   ZonedDateTime timeOfPurchase;
+   OffsetDateTime timeOfPurchase;
 
    public String[] getParams() {
       return new String[] {

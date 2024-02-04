@@ -32,17 +32,18 @@ public class ProductRepository implements ProductDAO {
    public Integer add(Product product) {
       if (Objects.nonNull(product.getId()))
          throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
-      Integer producerId = product.getProducer().getId();
 
       SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(simpleDriverDataSource);
       simpleJdbcInsert.setTableName("product");
+      simpleJdbcInsert.setGeneratedKeyName("id");
+      simpleJdbcInsert.setSchemaName("zajavka_store");
       Map<String, Object> params = Map.of(
               "code", product.getCode(),
               "name", product.getName(),
               "price", product.getPrice(),
               "adults_only", product.isAdultsOnly(),
               "description", product.getDescription(),
-              "producer_id", producerId
+              "producer_id", product.getProducer().getId()
       );
       return (Integer) simpleJdbcInsert.executeAndReturnKey(params);
    }
@@ -52,7 +53,7 @@ public class ProductRepository implements ProductDAO {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
       BeanPropertyRowMapper<Product> purchaseBeanPropertyRowMapper
               = BeanPropertyRowMapper.newInstance(Product.class);
-      String sql = "SELECT FROM product WHERE id = ?";
+      String sql = "SELECT * FROM zajavka_store.product WHERE id = ?";
       List<Product> result = jdbcTemplate.query(sql, purchaseBeanPropertyRowMapper, id);
 
       Optional<Product> any = result.stream().findAny();
@@ -75,7 +76,7 @@ public class ProductRepository implements ProductDAO {
    @Override
    public Product update(Integer productId, String[] params) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "UPDATE product SET code = ?, name = ?, price = ?, adults_only = ?, description = ?, producer_id = ? WHERE id = ?";
+      String sql = "UPDATE zajavka_store.product SET code = ?, name = ?, price = ?, adults_only = ?, description = ?, producer_id = ? WHERE id = ?";
       jdbcTemplate.update(sql, params[0], params[1], params[2],params[3],params[4],params[5], productId);
       loadedProducts.remove(productId);
       return get(productId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
@@ -84,7 +85,7 @@ public class ProductRepository implements ProductDAO {
    @Override
    public void delete(Integer productId) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "DELETE FROM product WHERE id = ?";
+      String sql = "DELETE FROM zajavka_store.product WHERE id = ?";
       jdbcTemplate.update(sql, productId);
       loadedProducts.remove(productId);
    }

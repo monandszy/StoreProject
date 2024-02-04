@@ -10,10 +10,13 @@ import code.domain.Producer;
 import code.infrastructure.configuration.ApplicationConfiguration;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -38,6 +41,7 @@ public class CRUDTest {
    private final ProductDAO productDAO;
    private final PurchaseDAO purchaseDAO;
    private final OpinionDAO opinionDAO;
+   private final SimpleDriverDataSource simpleDriverDataSource;
 
    @Container
    static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:16.1");
@@ -59,6 +63,12 @@ public class CRUDTest {
       Assertions.assertTrue(read.isPresent());
       Customer test1Read = read.orElseThrow();
       Assertions.assertEquals(test1.getUserName(), test1Read.getUserName());
+      // SecondRead
+      Optional<Customer> read2 = customerDAO.get(key);
+      Assertions.assertTrue(read2.isPresent());
+      Customer test1Read2 = read2.orElseThrow();
+      Assertions.assertSame(read.orElseThrow(), read2.orElseThrow());
+
 
       // Update
       String[] params = test1Read.getParams();
@@ -72,7 +82,7 @@ public class CRUDTest {
 
       //Delete
       customerDAO.delete(key);
-      Assertions.assertThrows(RuntimeException.class, () -> customerDAO.get(key));
+      Assertions.assertTrue(customerDAO.get(key).isEmpty());
    }
 
    @Test
@@ -86,6 +96,11 @@ public class CRUDTest {
       Assertions.assertTrue(read.isPresent());
       Producer test1Read = read.orElseThrow();
       Assertions.assertEquals(test1.getAddress(), test1Read.getAddress());
+      // SecondRead
+      Optional<Producer> read2 = producerDAO.get(key);
+      Assertions.assertTrue(read2.isPresent());
+      Producer test1Read2 = read2.orElseThrow();
+      Assertions.assertSame(read.orElseThrow(), read2.orElseThrow());
 
       // Update
       String[] params = test1Read.getParams();
@@ -99,7 +114,8 @@ public class CRUDTest {
 
       //Delete
       producerDAO.delete(key);
-      Assertions.assertThrows(RuntimeException.class, () -> producerDAO.get(key));
+      Assertions.assertTrue(producerDAO.get(key).isEmpty());
+
    }
 
    @Test

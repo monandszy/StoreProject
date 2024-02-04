@@ -31,7 +31,7 @@ public class CustomerRepository implements CustomerDAO {
       if (Objects.nonNull(customer.getId()))
          throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "INSERT INTO customer (user_name, email, name, surname, date_of_birth) VALUES (?, ?, ?, ?, ?)";
+      String sql = "INSERT INTO zajavka_store.customer (user_name, email, name, surname, date_of_birth) VALUES (?, ?, ?, ?, ?)";
 
       KeyHolder keyHolder = new GeneratedKeyHolder();
       jdbcTemplate.update(connection -> {
@@ -45,14 +45,14 @@ public class CustomerRepository implements CustomerDAO {
          return ps;
       }, keyHolder);
 
-      return (Integer) keyHolder.getKey();
+      return (Integer) keyHolder.getKeys().get("id");
    }
 
 
    @Override
    public Optional<Customer> get(Integer id) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "SELECT FROM customer WHERE id = ?";
+      String sql = "SELECT * FROM zajavka_store.customer WHERE id = ?";
       RowMapper<Customer> customerRowMapper = (resultSet, rowNum) -> Customer.builder()
               .id(resultSet.getInt("id"))
               .userName(resultSet.getString("user_name"))
@@ -84,11 +84,11 @@ public class CustomerRepository implements CustomerDAO {
    @Override
    public Customer update(Integer customerId, String[] params) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "UPDATE customer SET " +
+      String sql = "UPDATE zajavka_store.customer SET " +
               "user_name = ?, email = ?, name = ?, surname = ?, date_of_birth = ?" +
               "  WHERE id = ?";
       jdbcTemplate.update(sql, params[0], params[1], params[2],
-              params[3], params[4], params[5], customerId);
+              params[3], Date.valueOf(params[4]), customerId);
       loadedCustomers.remove(customerId);
       return get(customerId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
    }
@@ -96,7 +96,7 @@ public class CustomerRepository implements CustomerDAO {
    @Override
    public void delete(Integer customerId) {
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "DELETE FROM customer WHERE id = ?";
+      String sql = "DELETE FROM zajavka_store.customer WHERE id = ?";
       jdbcTemplate.update(sql, customerId);
       loadedCustomers.remove(customerId);
    }

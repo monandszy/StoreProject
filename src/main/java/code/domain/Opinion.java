@@ -6,6 +6,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.With;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 
 @Value
@@ -19,7 +20,7 @@ public class Opinion {
    Product product;
    int stars;
    String comment;
-   ZonedDateTime timeOfComment;
+   OffsetDateTime timeOfComment;
 
    public String[] getParams() {
       return new String[] {

@@ -48,7 +48,7 @@ public class TestData {
               .customer(getTest1Customer())
               .product(getTest1Product())
               .quantity(1)
-              .timeOfPurchase(ZonedDateTime.now())
+              .timeOfPurchase(OffsetDateTime.now())
               .build();
       return test1;
    }
@@ -59,7 +59,7 @@ public class TestData {
               .product(getTest1Product())
               .stars(1)
               .comment("test1comment")
-              .timeOfComment(ZonedDateTime.now())
+              .timeOfComment(OffsetDateTime.now())
               .build();
       return test1;
    }
