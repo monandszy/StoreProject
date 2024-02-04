@@ -2,11 +2,11 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.CustomerDAO;
 import code.domain.Customer;
-import code.domain.exception.LoadedObjectIsModifiedException;
 import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -26,6 +26,7 @@ import java.util.TreeMap;
 public class CustomerRepository implements CustomerDAO {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
+   private final CRUDRepository<Customer> crudRepository;
    private final Map<Integer, Customer> loadedCustomers = new TreeMap<>();
 
    private final String INSERT_SQL = "INSERT INTO zajavka_store.customer " +
@@ -50,55 +51,69 @@ public class CustomerRepository implements CustomerDAO {
       return (Integer) keyHolder.getKeys().get("id");
    }
 
-   @Override
-   public Optional<Customer> get(Integer id) {
-      JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "SELECT * FROM zajavka_store.customer WHERE id = ?";
-      RowMapper<Customer> customerRowMapper = (resultSet, rowNum) -> Customer.builder()
-              .id(resultSet.getInt("id"))
-              .userName(resultSet.getString("user_name"))
-              .email(resultSet.getString("email"))
-              .name(resultSet.getString("name"))
-              .surname(resultSet.getString("surname"))
-              .dateOfBirth(resultSet.getDate("date_of_birth").toLocalDate())
+   private static RowMapper<Customer> getCustomerRowMapper() {
+      RowMapper<Customer> customerRowMapper = (rs, rowNum) -> Customer.builder()
+              .id(rs.getInt("id"))
+              .userName(rs.getString("user_name"))
+              .email(rs.getString("email"))
+              .name(rs.getString("name"))
+              .surname(rs.getString("surname"))
+              .dateOfBirth(rs.getDate("date_of_birth").toLocalDate())
               .build();
-      List<Customer> result = jdbcTemplate.query(sql, customerRowMapper, id);
+      return customerRowMapper;
+   }
 
-      Optional<Customer> any = result.stream().findAny();
+   @Override
+   public Optional<Customer> getById(Integer id) {
+      if (loadedCustomers.containsKey(id)) {
+         return Optional.of(loadedCustomers.get(id));
+      }
+      RowMapper<Customer> customerRowMapper = getCustomerRowMapper();
+      Optional<Customer> any = crudRepository.get("customer", "id", id, customerRowMapper).stream().findAny();
       if (any.isPresent()) {
          Customer loadedCustomer = any.get();
-         Integer loadedId = loadedCustomer.getId();
-         if (loadedCustomers.containsKey(loadedId)) {
-            Customer existingCustomer = loadedCustomers.get(loadedId);
-            if (existingCustomer.equals(loadedCustomer)) {
-               return Optional.of(existingCustomer);
-            } else {
-               throw new LoadedObjectIsModifiedException();
-            }
-         } else {
-            loadedCustomers.put(loadedId, loadedCustomer);
-         }
+         loadedCustomers.put(loadedCustomer.getId(), loadedCustomer);
       }
       return any;
    }
 
-   @Override
-   public Customer update(Integer customerId, String[] params) {
-      JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "UPDATE zajavka_store.customer SET " +
-              "user_name = ?, email = ?, name = ?, surname = ?, date_of_birth = ?" +
-              "  WHERE id = ?";
-      jdbcTemplate.update(sql, params[0], params[1], params[2],
-              params[3], Date.valueOf(params[4]), customerId);
-      loadedCustomers.remove(customerId);
-      return get(customerId).orElseThrow();
+   private final String UPDATE_SQL = "UPDATE zajavka_store.customer SET " +
+           "user_name = :userName, email = :email, name = :name, surname = :surname, date_of_birth = :dateOfBirth" +
+           "  WHERE id = :id";
+
+   private static MapSqlParameterSource getParameterToNamedMap(Integer customerId, String[] params) {
+      MapSqlParameterSource customerParamsToNamedMap = new MapSqlParameterSource()
+              .addValue("userName", params[0])
+              .addValue("email", params[1])
+              .addValue("name", params[2])
+              .addValue("surname", params[3])
+              .addValue("dateOfBirth", Date.valueOf(params[4]))
+              .addValue("id", customerId);
+      return customerParamsToNamedMap;
    }
 
    @Override
-   public void delete(Integer customerId) {
-      JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "DELETE FROM zajavka_store.customer WHERE id = ?";
-      jdbcTemplate.update(sql, customerId);
+   public Customer updateWhereId(Integer customerId, String[] params) {
+      MapSqlParameterSource customerParamsToNamedMap = getParameterToNamedMap(customerId, params);
+      crudRepository.updateById(UPDATE_SQL, customerParamsToNamedMap);
       loadedCustomers.remove(customerId);
+      return getById(customerId).orElseThrow();
+   }
+
+   @Override
+   public void deleteById(Integer customerId) {
+      crudRepository.delete("customer", "id", customerId);
+      loadedCustomers.remove(customerId);
+   }
+
+   @Override
+   public void deleteAll() {
+      crudRepository.delete("customer", 1, 1);
+      loadedCustomers.clear();
+   }
+
+   @Override
+   public List<Customer> getAll() {
+      return crudRepository.get("customer", 1, 1, getCustomerRowMapper());
    }
 }
