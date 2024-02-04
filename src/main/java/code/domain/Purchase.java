@@ -23,8 +23,8 @@ public class Purchase {
 
    public String[] getParams() {
       return new String[] {
-              customer.getId().toString(),
-              product.getId().toString(),
+              "" + customer.getId(),
+              "" + product.getId(),
               "" + quantity,
               timeOfPurchase.toString()
       };

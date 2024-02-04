@@ -1,11 +1,10 @@
 package code.infrastructure.database.repository;
 
 import code.business.dao.ProducerDAO;
-import code.domain.Customer;
 import code.domain.Producer;
-import jakarta.annotation.Nullable;
+import code.domain.exception.LoadedObjectIsModifiedException;
+import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -29,7 +28,7 @@ public class ProducerRepository implements ProducerDAO {
    @Override
    public Integer add(Producer producer) {
       if (Objects.nonNull(producer.getId()))
-         throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
+         throw new ObjectIdNotAllowedException();
       SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(simpleDriverDataSource);
       simpleJdbcInsert.setTableName("producer");
       simpleJdbcInsert.setGeneratedKeyName("id");
@@ -58,7 +57,7 @@ public class ProducerRepository implements ProducerDAO {
             if (existingProducer.equals(loadedProducer)) {
                return Optional.of(existingProducer);
             } else {
-               throw new RuntimeException("This object is already loaded and has been modified, update database before fetching");
+               throw new LoadedObjectIsModifiedException();
             }
          } else {
             loadedProducers.put(loadedId, loadedProducer);
@@ -73,7 +72,7 @@ public class ProducerRepository implements ProducerDAO {
       String sql = "UPDATE zajavka_store.producer SET name = ?, address = ?  WHERE id = ?";
       jdbcTemplate.update(sql, params[0], params[1], producerId);
       loadedProducers.remove(producerId);
-      return get(producerId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
+      return get(producerId).orElseThrow();
    }
 
    @Override

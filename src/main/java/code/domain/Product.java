@@ -29,7 +29,7 @@ public class Product {
               price.toString(),
               "" + adultsOnly,
               description,
-              producer.getId().toString()
+              "" + producer.getId()
       };
    }
 }

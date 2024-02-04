@@ -2,8 +2,9 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.OpinionDAO;
 import code.domain.Opinion;
+import code.domain.exception.LoadedObjectIsModifiedException;
+import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,27 +29,23 @@ public class OpinionRepository implements OpinionDAO {
    private final Map<Integer, Opinion> loadedOpinions = new TreeMap<>();
    private final ProductRepository productRepository;
    private final CustomerRepository customerRepository;
-
-      /*id              SERIAL PRIMARY KEY       NOT NULL,
-    customer_id     INT                      NOT NULL,
-    product_id      INT                      NOT NULL,
-    stars           INTEGER                  NOT NULL,
-    comment         TEXT                     NOT NULL,
-    time_of_comment TIMESTAMP WITH TIME ZONE NOT NULL,*/
+   public static final DateTimeFormatter DATABASE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
 
    @Override
    public Integer add(Opinion opinion) {
       if (Objects.nonNull(opinion.getId()))
-         throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
+         throw new ObjectIdNotAllowedException();
       SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(simpleDriverDataSource);
       simpleJdbcInsert.setTableName("opinion");
       simpleJdbcInsert.setGeneratedKeyName("id");
       simpleJdbcInsert.setSchemaName("zajavka_store");
+      Integer customerId = customerRepository.add(opinion.getCustomer());
+      Integer productId = productRepository.add(opinion.getProduct());
       MapSqlParameterSource params = new MapSqlParameterSource()
-              .addValue("customer_id", opinion.getCustomer().getId())
-              .addValue("product_id", opinion.getProduct().getId())
+              .addValue("customer_id", customerId)
+              .addValue("product_id", productId)
               .addValue("stars", opinion.getStars())
-              .addValue("time_of_comment", opinion.getTimeOfComment());
+              .addValue("time_of_comment", DATABASE_DATE_FORMAT.format(opinion.getTimeOfComment()));
       return (Integer) simpleJdbcInsert.executeAndReturnKey(params);
 
    }
@@ -60,7 +58,7 @@ public class OpinionRepository implements OpinionDAO {
               .product(productRepository.get(rs.getInt("product_id")).orElseThrow())
               .customer(customerRepository.get(rs.getInt("customer_id")).orElseThrow())
               .stars(rs.getInt("stars"))
-              .timeOfComment(rs.getObject("time_of_comment", OffsetDateTime.class))
+              .timeOfComment(OffsetDateTime.parse(rs.getString("time_of_comment"), DATABASE_DATE_FORMAT))
               .build();
       String sql = "SELECT * FROM zajavka_store.producer WHERE id = ?";
       List<Opinion> result = jdbcTemplate.query(sql, opinionRowMapper, id);
@@ -74,8 +72,7 @@ public class OpinionRepository implements OpinionDAO {
             if (existingOpinion.equals(loadedOpinion)) {
                return Optional.of(existingOpinion);
             } else {
-               throw new RuntimeException("This object is already loaded " +
-                       "and has been modified, update database before fetching");
+               throw new LoadedObjectIsModifiedException();
             }
          } else {
             loadedOpinions.put(loadedId, loadedOpinion);
@@ -89,14 +86,14 @@ public class OpinionRepository implements OpinionDAO {
       String sql = "UPDATE zajavka_store.opinion SET customer_id = :customerId, product_id = :productId, " +
               "stars = :stars, time_of_comment = :timeOfComment WHERE id = :id";
       MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource()
-              .addValue("customerId", params[0])
-              .addValue("productId", params[1])
-              .addValue("stars", params[2])
-              .addValue("timeOfComment", params[3])
+              .addValue("customerId", Integer.valueOf(params[0]))
+              .addValue("productId", Integer.valueOf(params[1]))
+              .addValue("stars", Integer.valueOf(params[2]))
+              .addValue("timeOfComment", DATABASE_DATE_FORMAT.format(OffsetDateTime.parse(params[3])))
               .addValue("id", opinionId);
       namedParameterJdbcTemplate.update(sql, mapSqlParameterSource);
       loadedOpinions.remove(opinionId);
-      return get(opinionId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
+      return get(opinionId).orElseThrow();
    }
 
    @Override

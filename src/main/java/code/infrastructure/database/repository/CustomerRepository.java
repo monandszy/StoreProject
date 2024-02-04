@@ -2,6 +2,8 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.CustomerDAO;
 import code.domain.Customer;
+import code.domain.exception.LoadedObjectIsModifiedException;
+import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -26,17 +28,17 @@ public class CustomerRepository implements CustomerDAO {
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final Map<Integer, Customer> loadedCustomers = new TreeMap<>();
 
+   private final String INSERT_SQL = "INSERT INTO zajavka_store.customer " +
+           "(user_name, email, name, surname, date_of_birth) VALUES (?, ?, ?, ?, ?)";
+
    @Override
    public Integer add(Customer customer) {
       if (Objects.nonNull(customer.getId()))
-         throw new RuntimeException("Adding object with id present might result in duplicates, please use update instead");
+         throw new ObjectIdNotAllowedException();
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
-      String sql = "INSERT INTO zajavka_store.customer (user_name, email, name, surname, date_of_birth) VALUES (?, ?, ?, ?, ?)";
-
       KeyHolder keyHolder = new GeneratedKeyHolder();
       jdbcTemplate.update(connection -> {
-         PreparedStatement ps = connection
-                 .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+         PreparedStatement ps = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS);
          ps.setString(1, customer.getUserName());
          ps.setString(2, customer.getEmail());
          ps.setString(3, customer.getName());
@@ -47,7 +49,6 @@ public class CustomerRepository implements CustomerDAO {
 
       return (Integer) keyHolder.getKeys().get("id");
    }
-
 
    @Override
    public Optional<Customer> get(Integer id) {
@@ -72,7 +73,7 @@ public class CustomerRepository implements CustomerDAO {
             if (existingCustomer.equals(loadedCustomer)) {
                return Optional.of(existingCustomer);
             } else {
-               throw new RuntimeException("This object is already loaded and has been modified, update database before fetching");
+               throw new LoadedObjectIsModifiedException();
             }
          } else {
             loadedCustomers.put(loadedId, loadedCustomer);
@@ -90,7 +91,7 @@ public class CustomerRepository implements CustomerDAO {
       jdbcTemplate.update(sql, params[0], params[1], params[2],
               params[3], Date.valueOf(params[4]), customerId);
       loadedCustomers.remove(customerId);
-      return get(customerId).orElseThrow(() -> new RuntimeException("Error while updating, objectId has changed"));
+      return get(customerId).orElseThrow();
    }
 
    @Override

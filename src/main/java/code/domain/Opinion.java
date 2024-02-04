@@ -24,8 +24,8 @@ public class Opinion {
 
    public String[] getParams() {
       return new String[] {
-              customer.getId().toString(),
-              product.getId().toString(),
+              "" + customer.getId(),
+              "" + product.getId(),
               "" + stars,
               comment,
               timeOfComment.toString()
