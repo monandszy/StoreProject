@@ -2,7 +2,6 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.CustomerDAO;
 import code.domain.Customer;
-import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -15,11 +14,13 @@ import org.springframework.stereotype.Repository;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class CustomerRepository implements CustomerDAO {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Customer> crudRepository;
-   private final Map<Integer, Customer> loadedCustomers = new TreeMap<>();
+   private Map<Integer, Customer> loadedCustomers = new TreeMap<>();
 
    private final String INSERT_SQL = "INSERT INTO zajavka_store.customer " +
            "(user_name, email, name, surname, date_of_birth) VALUES (?, ?, ?, ?, ?)";
@@ -35,7 +36,7 @@ public class CustomerRepository implements CustomerDAO {
    @Override
    public Integer add(Customer customer) {
       if (Objects.nonNull(customer.getId()))
-         throw new ObjectIdNotAllowedException();
+         return updateWhereId(customer.getId(), customer.getParams()).getId();
       JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
       KeyHolder keyHolder = new GeneratedKeyHolder();
       jdbcTemplate.update(connection -> {
@@ -69,7 +70,7 @@ public class CustomerRepository implements CustomerDAO {
          return Optional.of(loadedCustomers.get(id));
       }
       RowMapper<Customer> customerRowMapper = getCustomerRowMapper();
-      Optional<Customer> any = crudRepository.get("customer", "id", id, customerRowMapper).stream().findAny();
+      Optional<Customer> any = crudRepository.get("customer", "id", "=", id, customerRowMapper).stream().findAny();
       if (any.isPresent()) {
          Customer loadedCustomer = any.get();
          loadedCustomers.put(loadedCustomer.getId(), loadedCustomer);
@@ -115,5 +116,21 @@ public class CustomerRepository implements CustomerDAO {
    @Override
    public List<Customer> getAll() {
       return crudRepository.get("customer", 1, 1, getCustomerRowMapper());
+   }
+
+   @Override
+   public List<Customer> getWhereAgeBelow(int age) {
+      Date ageGate = Date.valueOf(LocalDate.now().minusYears(age));
+      return crudRepository.get("customer", "date_of_birth", "<", ageGate, getCustomerRowMapper());
+   }
+
+   @Override
+   public void deleteWhereIdIn(List<Integer> ids) {
+      List<String> preparedList = ids.stream().map(Object::toString).toList();
+      crudRepository.deleteInList("customer", "id", preparedList);
+      this.loadedCustomers = loadedCustomers.entrySet().stream().filter(e -> ids.contains(e.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (l, r) -> {
+                 throw new RuntimeException();
+              }, TreeMap::new));
    }
 }

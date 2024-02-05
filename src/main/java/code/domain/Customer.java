@@ -18,7 +18,7 @@ public class Customer {
    LocalDate dateOfBirth;
 
    public String[] getParams() {
-      return new String[] {
+      return new String[]{
               userName,
               email,
               name,

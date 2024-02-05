@@ -5,11 +5,7 @@ import code.business.dao.OpinionDAO;
 import code.business.dao.ProducerDAO;
 import code.business.dao.ProductDAO;
 import code.business.dao.PurchaseDAO;
-import code.domain.Opinion;
-import code.domain.Purchase;
 import lombok.AllArgsConstructor;
-import lombok.ToString;
-import lombok.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

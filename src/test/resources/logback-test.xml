@@ -7,6 +7,14 @@
         </encoder>
     </appender>
 
+    <logger name="org.springframework.jdbc.core.JdbcTemplate" additivity="false" level="trace">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.jdbc.core.StatementCreatorUtils" additivity="false" level="trace">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+
     <root level="info">
         <appender-ref ref="CONSOLE"/>
     </root>

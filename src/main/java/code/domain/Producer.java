@@ -12,8 +12,9 @@ public class Producer {
    String name;
    String address;
 
+
    public String[] getParams() {
-      return new String[] {
+      return new String[]{
               name,
               address
       };

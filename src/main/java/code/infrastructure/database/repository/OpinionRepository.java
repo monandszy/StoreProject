@@ -2,9 +2,8 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.OpinionDAO;
 import code.domain.Opinion;
-import code.domain.Purchase;
-import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -17,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,8 +25,9 @@ public class OpinionRepository implements OpinionDAO {
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Opinion> crudRepository;
 
-   private final Map<Integer, Opinion> loadedOpinions = new TreeMap<>();
+   private Map<Integer, Opinion> loadedOpinions = new TreeMap<>();
    private final ProductRepository productRepository;
+   private final PurchaseRepository purchaseRepository;
    private final CustomerRepository customerRepository;
    public static final DateTimeFormatter DATABASE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
 
@@ -45,7 +46,7 @@ public class OpinionRepository implements OpinionDAO {
    @Override
    public Integer add(Opinion opinion) {
       if (Objects.nonNull(opinion.getId()))
-         throw new ObjectIdNotAllowedException();
+         return updateWhereId(opinion.getId(), opinion.getParams()).getId();
       MapSqlParameterSource params = getObjectToTableMap(opinion);
       return crudRepository.add("opinion", params);
    }
@@ -103,13 +104,56 @@ public class OpinionRepository implements OpinionDAO {
       crudRepository.delete("opinion", "id", opinionId);
       loadedOpinions.remove(opinionId);
    }
+
    @Override
    public void deleteAll() {
       crudRepository.delete("opinion", 1, 1);
       loadedOpinions.clear();
    }
+
    @Override
    public List<Opinion> getAll() {
+      System.out.println("loadedOpinions" + loadedOpinions);
       return crudRepository.get("opinion", 1, 1, getOpinionRowMapper());
+   }
+
+   @Override
+   public void deleteWherePropertyIn(Object property, List<Integer> wherePropertyIds) {
+      List<String> preparedList = wherePropertyIds.stream().map(Object::toString).toList();
+      crudRepository.deleteInList("opinion", property, preparedList);
+      this.loadedOpinions = loadedOpinions.entrySet().stream().filter(e -> wherePropertyIds.contains(e.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (l, r) -> {
+                 throw new RuntimeException();
+              }, TreeMap::new));
+   }
+
+   @Override
+   public void deleteWherePropertyNotIn(Object property, List<Integer> wherePropertyIds) {
+      System.out.println("wherePropertyIds:" + wherePropertyIds);
+      System.out.println("getValidOpinions():" + getValidOpinions());
+      List<String> preparedList = wherePropertyIds.stream().map(Object::toString).toList();
+      if (preparedList.isEmpty()) {
+         deleteAll();
+         return;
+      }
+      crudRepository.deleteNotInList("opinion", property, preparedList);
+      this.loadedOpinions = loadedOpinions.entrySet().stream().filter(e -> !wherePropertyIds.contains(e.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (l, r) -> {
+                 throw new RuntimeException();
+              }, TreeMap::new));
+   }
+
+   @Override
+   public List<Opinion> getWhereLowStars() {
+      return crudRepository.get("opinion", "stars", "<", 4, getOpinionRowMapper());
+   }
+
+   @Override
+   public List<Opinion> getValidOpinions() {
+      JdbcTemplate jdbcTemplate = new JdbcTemplate(simpleDriverDataSource);
+      String sql = "SELECT op.id, op.customer_id, op.product_id, op.stars, op.comment, op.time_of_comment " +
+              "FROM zajavka_store.opinion op, zajavka_store.purchase pu " +
+              "WHERE op.customer_id = pu.customer_id AND op.product_id = pu.product_id";
+      return jdbcTemplate.query(sql, getOpinionRowMapper());
    }
 }

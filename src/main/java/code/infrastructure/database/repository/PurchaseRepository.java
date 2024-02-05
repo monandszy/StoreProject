@@ -1,14 +1,10 @@
 package code.infrastructure.database.repository;
 
 import code.business.dao.PurchaseDAO;
-import code.domain.Customer;
 import code.domain.Purchase;
-import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -29,7 +26,7 @@ public class PurchaseRepository implements PurchaseDAO {
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Purchase> crudRepository;
 
-   private final Map<Integer, Purchase> loadedPurchases = new TreeMap<>();
+   private Map<Integer, Purchase> loadedPurchases = new TreeMap<>();
    private final ProductRepository productRepository;
    private final CustomerRepository customerRepository;
 
@@ -47,7 +44,7 @@ public class PurchaseRepository implements PurchaseDAO {
    @Override
    public Integer add(Purchase purchase) {
       if (Objects.nonNull(purchase.getId()))
-         throw new ObjectIdNotAllowedException();
+         return updateWhereId(purchase.getId(), purchase.getParams()).getId();
       MapSqlParameterSource params = getObjectToTableMap(purchase);
       return crudRepository.add("purchase", params);
    }
@@ -65,7 +62,7 @@ public class PurchaseRepository implements PurchaseDAO {
 
    @Override
    public Optional<Purchase> getById(Integer id) {
-      if (loadedPurchases.containsKey(id)){
+      if (loadedPurchases.containsKey(id)) {
          return Optional.of(loadedPurchases.get(id));
       }
       RowMapper<Purchase> purchaseRowMapper = getPurchaseRowMapper();
@@ -103,6 +100,7 @@ public class PurchaseRepository implements PurchaseDAO {
       crudRepository.delete("purchase", "id", purchaseId);
       loadedPurchases.remove(purchaseId);
    }
+
    @Override
    public void deleteAll() {
       crudRepository.delete("purchase", 1, 1);
@@ -112,5 +110,15 @@ public class PurchaseRepository implements PurchaseDAO {
    @Override
    public List<Purchase> getAll() {
       return crudRepository.get("purchase", 1, 1, getPurchaseRowMapper());
+   }
+
+   @Override
+   public void deleteWherePropertyIn(Object property, List<Integer> ids) {
+      List<String> preparedList = ids.stream().map(Object::toString).toList();
+      crudRepository.deleteInList("purchase", property, preparedList);
+      this.loadedPurchases = loadedPurchases.entrySet().stream().filter(e -> ids.contains(e.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (l, r) -> {
+                 throw new RuntimeException();
+              }, TreeMap::new));
    }
 }

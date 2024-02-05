@@ -23,7 +23,7 @@ public class Product {
    Producer producer;
 
    public String[] getParams() {
-      return new String[] {
+      return new String[]{
               code,
               name,
               price.toString(),

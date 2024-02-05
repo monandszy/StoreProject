@@ -9,7 +9,6 @@ import code.domain.Purchase;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 
 public class TestData {
    public static Producer getTest1Producer() {
@@ -36,7 +35,7 @@ public class TestData {
               .name("test1name")
               .price(new BigDecimal("100.1"))
               .code("test1code")
-              .adultsOnly(false)
+              .adultsOnly(true)
               .description("test1description")
               .producer(getTest1Producer())
               .build();

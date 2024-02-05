@@ -1,10 +1,7 @@
 package code.infrastructure.database.repository;
 
 import code.business.dao.ProductDAO;
-import code.domain.Producer;
 import code.domain.Product;
-import code.domain.Purchase;
-import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -17,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,7 +22,7 @@ public class ProductRepository implements ProductDAO {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Product> crudRepository;
-   private final Map<Integer, Product> loadedProducts = new TreeMap<>();
+   private Map<Integer, Product> loadedProducts = new TreeMap<>();
    private final ProducerRepository producerRepository;
 
    private MapSqlParameterSource getObjectToTableMap(Product product) {
@@ -42,7 +40,7 @@ public class ProductRepository implements ProductDAO {
    @Override
    public Integer add(Product product) {
       if (Objects.nonNull(product.getId()))
-         throw new ObjectIdNotAllowedException();
+         return updateWhereId(product.getId(), product.getParams()).getId();
       MapSqlParameterSource params = getObjectToTableMap(product);
       return crudRepository.add("product", params);
    }
@@ -102,13 +100,30 @@ public class ProductRepository implements ProductDAO {
       crudRepository.delete("product", "id", productId);
       loadedProducts.remove(productId);
    }
+
    @Override
    public void deleteAll() {
       crudRepository.delete("product", 1, 1);
       loadedProducts.clear();
    }
+
    @Override
    public List<Product> getAll() {
       return crudRepository.get("product", 1, 1, getProductRowMapper());
+   }
+
+   @Override
+   public List<Product> getQuestionableProducts() {
+      return crudRepository.get("product", "adults_only", true, getProductRowMapper());
+   }
+
+   @Override
+   public void deleteWhereIdIn(List<Integer> ids) {
+      List<String> preparedList = ids.stream().map(Object::toString).toList();
+      crudRepository.deleteInList("product", "id", preparedList);
+      this.loadedProducts = loadedProducts.entrySet().stream().filter(e -> ids.contains(e.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (l, r) -> {
+                 throw new RuntimeException();
+              }, TreeMap::new));
    }
 }

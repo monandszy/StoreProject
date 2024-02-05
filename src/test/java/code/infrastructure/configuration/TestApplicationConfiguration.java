@@ -2,6 +2,9 @@ package code.infrastructure.configuration;
 
 import code._ComponentScanMarker;
 import lombok.AllArgsConstructor;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.Location;
+import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.postgresql.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,7 +22,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ComponentScan(basePackageClasses = _ComponentScanMarker.class)
 @PropertySource(value = "classpath:database.properties")
 @EnableTransactionManagement
-public class ApplicationConfiguration {
+public class TestApplicationConfiguration {
 
    private final Environment environment;
 
@@ -34,15 +37,14 @@ public class ApplicationConfiguration {
       return dataSource;
    }
 
-//   @Bean(initMethod = "migrate")
-//   @DependsOn("databaseDataSource")
-//   Flyway flyway() {
-//      ClassicConfiguration configuration = new ClassicConfiguration();
-//      configuration.setBaselineOnMigrate(true);
-//      configuration.setLocations(new Location("filesystem:src/main/resources/database/migrations"));
-//      configuration.setDataSource(databaseDataSource());
-//      return new Flyway(configuration);
-//   }
+   @Bean(initMethod = "migrate")
+   Flyway flyway() {
+      ClassicConfiguration configuration = new ClassicConfiguration();
+      configuration.setBaselineOnMigrate(true);
+      configuration.setLocations(new Location("filesystem:src/main/resources/database/migrations"));
+      configuration.setDataSource(databaseDataSource());
+      return new Flyway(configuration);
+   }
 
    @Bean
    PlatformTransactionManager txManager() {

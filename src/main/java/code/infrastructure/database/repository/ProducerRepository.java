@@ -2,12 +2,9 @@ package code.infrastructure.database.repository;
 
 import code.business.dao.ProducerDAO;
 import code.domain.Producer;
-import code.domain.exception.ObjectIdNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Repository;
 
@@ -36,7 +33,7 @@ public class ProducerRepository implements ProducerDAO {
    @Override
    public Integer add(Producer producer) {
       if (Objects.nonNull(producer.getId()))
-         throw new ObjectIdNotAllowedException();
+         return updateWhereId(producer.getId(), producer.getParams()).getId();
       MapSqlParameterSource params = getObjectToTableMap(producer);
       return crudRepository.add("producer", params);
    }
@@ -87,6 +84,7 @@ public class ProducerRepository implements ProducerDAO {
       crudRepository.delete("producer", "id", producerId);
       loadedProducers.remove(producerId);
    }
+
    @Override
    public void deleteAll() {
       crudRepository.delete("producer", 1, 1);

@@ -7,7 +7,6 @@ import lombok.Value;
 import lombok.With;
 
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 
 @Value
 @ToString(exclude = {"customer", "product"})
@@ -22,7 +21,7 @@ public class Purchase {
    OffsetDateTime timeOfPurchase;
 
    public String[] getParams() {
-      return new String[] {
+      return new String[]{
               "" + customer.getId(),
               "" + product.getId(),
               "" + quantity,

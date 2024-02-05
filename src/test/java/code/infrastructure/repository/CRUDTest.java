@@ -1,4 +1,4 @@
-package code;
+package code.infrastructure.repository;
 
 import code.business.service.DatabaseService;
 import code.domain.Customer;
@@ -6,7 +6,7 @@ import code.domain.Opinion;
 import code.domain.Producer;
 import code.domain.Product;
 import code.domain.Purchase;
-import code.infrastructure.configuration.ApplicationConfiguration;
+import code.infrastructure.configuration.TestApplicationConfiguration;
 import code.infrastructure.database.repository.CustomerRepository;
 import code.infrastructure.database.repository.OpinionRepository;
 import code.infrastructure.database.repository.ProducerRepository;
@@ -37,7 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
-@SpringJUnitConfig(classes = {ApplicationConfiguration.class})
+@SpringJUnitConfig(classes = {TestApplicationConfiguration.class})
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Testcontainers
 public class CRUDTest {
@@ -51,6 +51,7 @@ public class CRUDTest {
 
    @Container
    static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:16.1");
+
    @DynamicPropertySource
    static void postgreSQLProperties(DynamicPropertyRegistry registry) {
       registry.add("jdbc.url", postgreSQL::getJdbcUrl);
