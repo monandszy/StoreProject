@@ -1,6 +1,5 @@
 package code.infrastructure.database.repository;
 
-import code.business.dao.CustomerDAO;
 import code.domain.Customer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class CustomerRepository implements CustomerDAO {
+public class CustomerRepository implements code.business.dao.CustomerRepository {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Customer> crudRepository;

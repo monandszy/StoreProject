@@ -1,6 +1,7 @@
 package code.infrastructure.configuration;
 
 import code._ComponentScanMarker;
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.postgresql.Driver;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.TimeZone;
+
 @Configuration
 @AllArgsConstructor
 @ComponentScan(basePackageClasses = _ComponentScanMarker.class)
@@ -22,6 +25,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class ApplicationConfiguration {
 
    private final Environment environment;
+
+   @PostConstruct
+   public void init() {
+      TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+   }
 
    @Bean
    public SimpleDriverDataSource databaseDataSource() {

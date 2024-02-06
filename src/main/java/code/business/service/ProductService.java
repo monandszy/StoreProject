@@ -1,8 +1,8 @@
 package code.business.service;
 
-import code.business.dao.OpinionDAO;
-import code.business.dao.ProductDAO;
-import code.business.dao.PurchaseDAO;
+import code.business.dao.OpinionRepository;
+import code.business.dao.ProductRepository;
+import code.business.dao.PurchaseRepository;
 import code.domain.Product;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,15 +14,15 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductService {
 
-   private final ProductDAO productDAO;
-   private final PurchaseDAO purchaseDAO;
-   private final OpinionDAO opinionDAO;
+   private final ProductRepository productRepository;
+   private final PurchaseRepository purchaseRepository;
+   private final OpinionRepository opinionRepository;
 
    @Transactional
    void deleteQuestionableProducts() {
-      List<Integer> list = productDAO.getQuestionableProducts().stream().map(Product::getId).toList();
-      opinionDAO.deleteWherePropertyIn("product_id", list);
-      purchaseDAO.deleteWherePropertyIn("product_id", list);
-      productDAO.deleteWhereIdIn(list);
+      List<Integer> list = productRepository.getQuestionableProducts().stream().map(Product::getId).toList();
+      opinionRepository.deleteWherePropertyIn("product_id", list);
+      purchaseRepository.deleteWherePropertyIn("product_id", list);
+      productRepository.deleteWhereIdIn(list);
    }
 }

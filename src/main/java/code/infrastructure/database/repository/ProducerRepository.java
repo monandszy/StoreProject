@@ -1,6 +1,5 @@
 package code.infrastructure.database.repository;
 
-import code.business.dao.ProducerDAO;
 import code.domain.Producer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,7 +15,7 @@ import java.util.TreeMap;
 
 @Repository
 @RequiredArgsConstructor
-public class ProducerRepository implements ProducerDAO {
+public class ProducerRepository implements code.business.dao.ProducerRepository {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Producer> crudRepository;

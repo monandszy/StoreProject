@@ -1,6 +1,5 @@
 package code.infrastructure.database.repository;
 
-import code.business.dao.PurchaseDAO;
 import code.domain.Purchase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class PurchaseRepository implements PurchaseDAO {
+public class PurchaseRepository implements code.business.dao.PurchaseRepository {
 
    public static final DateTimeFormatter DATABASE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssX");
 

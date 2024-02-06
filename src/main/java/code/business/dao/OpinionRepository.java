@@ -4,7 +4,7 @@ import code.domain.Opinion;
 
 import java.util.List;
 
-public interface OpinionDAO extends DAO<Opinion> {
+public interface OpinionRepository extends DAO<Opinion> {
 
    void deleteWherePropertyIn(Object property, List<Integer> whereAgeBelowIds);
 

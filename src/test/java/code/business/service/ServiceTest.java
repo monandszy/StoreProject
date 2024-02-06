@@ -14,6 +14,7 @@ import code.infrastructure.database.repository.PurchaseRepository;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -68,8 +69,8 @@ class ServiceTest {
    }
 
    @Test
+   @DisplayName("Assert NotValid Deletion")
    void opinionServiceValidationTest1() {
-      // Assert NotValid Deletion
       Integer id = opinionRepository.add(TestData.getTest1Opinion());
       Assertions.assertTrue(opinionRepository.getValidOpinions().isEmpty());
       opinionService.validateThatOpinionMatchesPurchase();
@@ -78,8 +79,8 @@ class ServiceTest {
    }
 
    @Test
+   @DisplayName("Assert Valid is not deleted")
    void opinionServiceValidationTest2() {
-      // Assert Valid is not deleted
       Integer id = opinionRepository.add(TestData.getTest1Opinion());
       Opinion opinion = opinionRepository.getById(id).orElseThrow();
       purchaseService.buyProduct(opinion.getCustomer().getId(), opinion.getProduct().getId(), 1);

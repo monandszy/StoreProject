@@ -4,7 +4,7 @@ import code.domain.Customer;
 
 import java.util.List;
 
-public interface CustomerDAO extends DAO<Customer> {
+public interface CustomerRepository extends DAO<Customer> {
 
    List<Customer> getWhereAgeBelow(int age);
 

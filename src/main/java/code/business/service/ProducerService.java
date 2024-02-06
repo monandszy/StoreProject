@@ -1,6 +1,6 @@
 package code.business.service;
 
-import code.business.dao.ProducerDAO;
+import code.business.dao.ProducerRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProducerService {
 
-   private final ProducerDAO producerDAO;
+   private final ProducerRepository producerRepository;
 }

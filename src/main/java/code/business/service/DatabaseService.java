@@ -1,10 +1,10 @@
 package code.business.service;
 
-import code.business.dao.CustomerDAO;
-import code.business.dao.OpinionDAO;
-import code.business.dao.ProducerDAO;
-import code.business.dao.ProductDAO;
-import code.business.dao.PurchaseDAO;
+import code.business.dao.CustomerRepository;
+import code.business.dao.OpinionRepository;
+import code.business.dao.ProducerRepository;
+import code.business.dao.ProductRepository;
+import code.business.dao.PurchaseRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DatabaseService {
 
-   private final CustomerDAO customerDAO;
-   private final ProducerDAO producerDAO;
-   private final ProductDAO productDAO;
-   private final PurchaseDAO purchaseDAO;
-   private final OpinionDAO opinionDAO;
+   private final CustomerRepository customerRepository;
+   private final ProducerRepository producerRepository;
+   private final ProductRepository productRepository;
+   private final PurchaseRepository purchaseRepository;
+   private final OpinionRepository opinionRepository;
 
    @Transactional
    public void deleteAll() {
-      opinionDAO.deleteAll();
-      purchaseDAO.deleteAll();
-      productDAO.deleteAll();
-      producerDAO.deleteAll();
-      customerDAO.deleteAll();
+      opinionRepository.deleteAll();
+      purchaseRepository.deleteAll();
+      productRepository.deleteAll();
+      producerRepository.deleteAll();
+      customerRepository.deleteAll();
    }
 }

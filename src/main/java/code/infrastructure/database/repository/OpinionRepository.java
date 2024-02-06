@@ -1,6 +1,5 @@
 package code.infrastructure.database.repository;
 
-import code.business.dao.OpinionDAO;
 import code.domain.Opinion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class OpinionRepository implements OpinionDAO {
+public class OpinionRepository implements code.business.dao.OpinionRepository {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Opinion> crudRepository;

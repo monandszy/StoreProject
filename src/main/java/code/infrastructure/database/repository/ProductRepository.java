@@ -1,6 +1,5 @@
 package code.infrastructure.database.repository;
 
-import code.business.dao.ProductDAO;
 import code.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class ProductRepository implements ProductDAO {
+public class ProductRepository implements code.business.dao.ProductRepository {
 
    private final SimpleDriverDataSource simpleDriverDataSource;
    private final CRUDRepository<Product> crudRepository;

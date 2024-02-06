@@ -4,6 +4,6 @@ import code.domain.Purchase;
 
 import java.util.List;
 
-public interface PurchaseDAO extends DAO<Purchase> {
+public interface PurchaseRepository extends DAO<Purchase> {
    void deleteWherePropertyIn(Object property, List<Integer> whereAgeBelowIds);
 }
