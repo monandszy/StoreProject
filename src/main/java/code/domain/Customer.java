@@ -10,20 +10,20 @@ import java.time.LocalDate;
 @Builder
 @With
 public class Customer {
-   Integer id;
-   String userName;
-   String email;
-   String name;
-   String surname;
-   LocalDate dateOfBirth;
+  Integer id;
+  String userName;
+  String email;
+  String name;
+  String surname;
+  LocalDate dateOfBirth;
 
-   public String[] getParams() {
-      return new String[]{
-              userName,
-              email,
-              name,
-              surname,
-              dateOfBirth.toString()
-      };
-   }
+  public String[] getParams() {
+    return new String[]{
+      userName,
+      email,
+      name,
+      surname,
+      dateOfBirth.toString()
+    };
+  }
 }

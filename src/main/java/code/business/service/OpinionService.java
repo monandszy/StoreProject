@@ -12,17 +12,17 @@ import java.util.List;
 @AllArgsConstructor
 public class OpinionService {
 
-   private final OpinionRepository opinionRepository;
+  private final OpinionRepository opinionRepository;
 
-   @Transactional
-   void validateThatOpinionMatchesPurchase() {
-      List<Integer> whereValidOpinions = opinionRepository.getValidOpinions().stream().map(Opinion::getId).toList();
-      opinionRepository.deleteWherePropertyNotIn("id", whereValidOpinions);
-   }
+  @Transactional
+  void validateThatOpinionMatchesPurchase() {
+    List<Integer> whereValidOpinions = opinionRepository.getValidOpinions().stream().map(Opinion::getId).toList();
+    opinionRepository.deleteWherePropertyNotIn("id", whereValidOpinions);
+  }
 
-   @Transactional
-   void adjustQuestionableOpinions() {
-      List<Integer> whereLowStars = opinionRepository.getWhereLowStars().stream().map(Opinion::getId).toList();
-      opinionRepository.deleteWherePropertyIn("id", whereLowStars);
-   }
+  @Transactional
+  void adjustQuestionableOpinions() {
+    List<Integer> whereLowStars = opinionRepository.getWhereLowStars().stream().map(Opinion::getId).toList();
+    opinionRepository.deleteWherePropertyIn("id", whereLowStars);
+  }
 }

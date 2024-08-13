@@ -32,88 +32,87 @@ import java.util.Optional;
 @Testcontainers
 class ServiceTest {
 
-   private CustomerService customerService;
-   private OpinionService opinionService;
-   private ProducerService producerService;
-   private ProductService productService;
-   private PurchaseService purchaseService;
-   private DatabaseService databaseService;
-   private CustomerRepository customerRepository;
-   private ProducerRepository producerRepository;
-   private ProductRepository productRepository;
-   private PurchaseRepository purchaseRepository;
-   private OpinionRepository opinionRepository;
+  private CustomerService customerService;
+  private OpinionService opinionService;
+  private ProducerService producerService;
+  private ProductService productService;
+  private PurchaseService purchaseService;
+  private DatabaseService databaseService;
+  private CustomerRepository customerRepository;
+  private ProducerRepository producerRepository;
+  private ProductRepository productRepository;
+  private PurchaseRepository purchaseRepository;
+  private OpinionRepository opinionRepository;
 
+  @Container
+  static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:16.1");
 
-   @Container
-   static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:16.1");
+  @DynamicPropertySource
+  static void postgreSQLProperties(DynamicPropertyRegistry registry) {
+    registry.add("jdbc.url", postgreSQL::getJdbcUrl);
+    registry.add("jdbc.user", postgreSQL::getUsername);
+    registry.add("jdbc.pass", postgreSQL::getPassword);
+  }
 
-   @DynamicPropertySource
-   static void postgreSQLProperties(DynamicPropertyRegistry registry) {
-      registry.add("jdbc.url", postgreSQL::getJdbcUrl);
-      registry.add("jdbc.user", postgreSQL::getUsername);
-      registry.add("jdbc.pass", postgreSQL::getPassword);
-   }
+  @BeforeEach
+  void cleanDatabase() {
+    databaseService.deleteAll();
+  }
 
-   @BeforeEach
-   void cleanDatabase() {
-      databaseService.deleteAll();
-   }
+  @Test
+  void customerServiceTest() {
+    customerRepository.add(TestData.getTest1Customer());
+    customerService.deleteCustomersWhereAgeBelow16();
+    List<Customer> whereAgeBelow = customerRepository.getWhereAgeBelow(16);
+    Assertions.assertTrue(whereAgeBelow.isEmpty());
+  }
 
-   @Test
-   void customerServiceTest() {
-      customerRepository.add(TestData.getTest1Customer());
-      customerService.deleteCustomersWhereAgeBelow16();
-      List<Customer> whereAgeBelow = customerRepository.getWhereAgeBelow(16);
-      Assertions.assertTrue(whereAgeBelow.isEmpty());
-   }
+  @Test
+  @DisplayName("Assert NotValid Deletion")
+  void opinionServiceValidationTest1() {
+    Integer id = opinionRepository.add(TestData.getTest1Opinion());
+    Assertions.assertTrue(opinionRepository.getValidOpinions().isEmpty());
+    opinionService.validateThatOpinionMatchesPurchase();
+    Assertions.assertTrue(opinionRepository.getValidOpinions().isEmpty());
+    Assertions.assertTrue(opinionRepository.getById(id).isEmpty());
+  }
 
-   @Test
-   @DisplayName("Assert NotValid Deletion")
-   void opinionServiceValidationTest1() {
-      Integer id = opinionRepository.add(TestData.getTest1Opinion());
-      Assertions.assertTrue(opinionRepository.getValidOpinions().isEmpty());
-      opinionService.validateThatOpinionMatchesPurchase();
-      Assertions.assertTrue(opinionRepository.getValidOpinions().isEmpty());
-      Assertions.assertTrue(opinionRepository.getById(id).isEmpty());
-   }
+  @Test
+  @DisplayName("Assert Valid is not deleted")
+  void opinionServiceValidationTest2() {
+    Integer id = opinionRepository.add(TestData.getTest1Opinion());
+    Opinion opinion = opinionRepository.getById(id).orElseThrow();
+    purchaseService.buyProduct(opinion.getCustomer().getId(), opinion.getProduct().getId(), 1);
+    Assertions.assertFalse(opinionRepository.getValidOpinions().isEmpty());
+    opinionService.validateThatOpinionMatchesPurchase();
+    Assertions.assertFalse(opinionRepository.getValidOpinions().isEmpty());
+    Assertions.assertTrue(opinionRepository.getById(id).isPresent());
+  }
 
-   @Test
-   @DisplayName("Assert Valid is not deleted")
-   void opinionServiceValidationTest2() {
-      Integer id = opinionRepository.add(TestData.getTest1Opinion());
-      Opinion opinion = opinionRepository.getById(id).orElseThrow();
-      purchaseService.buyProduct(opinion.getCustomer().getId(), opinion.getProduct().getId(), 1);
-      Assertions.assertFalse(opinionRepository.getValidOpinions().isEmpty());
-      opinionService.validateThatOpinionMatchesPurchase();
-      Assertions.assertFalse(opinionRepository.getValidOpinions().isEmpty());
-      Assertions.assertTrue(opinionRepository.getById(id).isPresent());
-   }
+  @Test
+  void OpinionServiceStarAdjustTest() {
+    opinionRepository.add(TestData.getTest1Opinion());
+    List<Opinion> whereLowStars = opinionRepository.getWhereLowStars();
+    Assertions.assertFalse(whereLowStars.isEmpty());
+    opinionService.adjustQuestionableOpinions();
+    whereLowStars = opinionRepository.getWhereLowStars();
+    Assertions.assertTrue(whereLowStars.isEmpty());
+  }
 
-   @Test
-   void OpinionServiceStarAdjustTest() {
-      opinionRepository.add(TestData.getTest1Opinion());
-      List<Opinion> whereLowStars = opinionRepository.getWhereLowStars();
-      Assertions.assertFalse(whereLowStars.isEmpty());
-      opinionService.adjustQuestionableOpinions();
-      whereLowStars = opinionRepository.getWhereLowStars();
-      Assertions.assertTrue(whereLowStars.isEmpty());
-   }
+  @Test
+  void productServiceTest() {
+    productService.deleteQuestionableProducts();
+    List<Product> questionableProducts = productRepository.getQuestionableProducts();
+    Assertions.assertTrue(questionableProducts.isEmpty());
+  }
 
-   @Test
-   void productServiceTest() {
-      productService.deleteQuestionableProducts();
-      List<Product> questionableProducts = productRepository.getQuestionableProducts();
-      Assertions.assertTrue(questionableProducts.isEmpty());
-   }
-
-   @Test
-   void purchaseServiceTest() {
-      Integer customerId = customerRepository.add(TestData.getTest1Customer());
-      Integer productId = productRepository.add(TestData.getTest1Product());
-      Integer id = purchaseService.buyProduct(customerId, productId, 1);
-      Optional<Purchase> byId = purchaseRepository.getById(id);
-      Assertions.assertTrue(byId.isPresent());
-   }
+  @Test
+  void purchaseServiceTest() {
+    Integer customerId = customerRepository.add(TestData.getTest1Customer());
+    Integer productId = productRepository.add(TestData.getTest1Product());
+    Integer id = purchaseService.buyProduct(customerId, productId, 1);
+    Optional<Purchase> byId = purchaseRepository.getById(id);
+    Assertions.assertTrue(byId.isPresent());
+  }
 
 }

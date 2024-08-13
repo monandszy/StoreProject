@@ -5,7 +5,7 @@ import code.domain.Product;
 import java.util.List;
 
 public interface ProductRepository extends DAO<Product> {
-   List<Product> getQuestionableProducts();
+  List<Product> getQuestionableProducts();
 
-   void deleteWhereIdIn(List<Integer> ids);
+  void deleteWhereIdIn(List<Integer> ids);
 }

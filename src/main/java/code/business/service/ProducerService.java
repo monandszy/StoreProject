@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProducerService {
 
-   private final ProducerRepository producerRepository;
+  private final ProducerRepository producerRepository;
 }

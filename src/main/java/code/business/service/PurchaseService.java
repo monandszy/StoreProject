@@ -15,20 +15,20 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class PurchaseService {
 
-   private final PurchaseRepository purchaseRepository;
-   private final CustomerRepository customerRepository;
-   private final ProductRepository productRepository;
+  private final PurchaseRepository purchaseRepository;
+  private final CustomerRepository customerRepository;
+  private final ProductRepository productRepository;
 
-   Integer buyProduct(Integer customerId, Integer productId, int quantity) {
-      Customer customer = customerRepository.getById(customerId).orElseThrow();
-      Product product = productRepository.getById(productId).orElseThrow();
+  Integer buyProduct(Integer customerId, Integer productId, int quantity) {
+    Customer customer = customerRepository.getById(customerId).orElseThrow();
+    Product product = productRepository.getById(productId).orElseThrow();
 
-      Purchase newPurchase = Purchase.builder()
-              .customer(customer)
-              .product(product)
-              .quantity(quantity)
-              .timeOfPurchase(OffsetDateTime.now())
-              .build();
-      return purchaseRepository.add(newPurchase);
-   }
+    Purchase newPurchase = Purchase.builder()
+      .customer(customer)
+      .product(product)
+      .quantity(quantity)
+      .timeOfPurchase(OffsetDateTime.now())
+      .build();
+    return purchaseRepository.add(newPurchase);
+  }
 }

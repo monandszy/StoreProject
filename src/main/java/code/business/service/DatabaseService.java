@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DatabaseService {
 
-   private final CustomerRepository customerRepository;
-   private final ProducerRepository producerRepository;
-   private final ProductRepository productRepository;
-   private final PurchaseRepository purchaseRepository;
-   private final OpinionRepository opinionRepository;
+  private final CustomerRepository customerRepository;
+  private final ProducerRepository producerRepository;
+  private final ProductRepository productRepository;
+  private final PurchaseRepository purchaseRepository;
+  private final OpinionRepository opinionRepository;
 
-   @Transactional
-   public void deleteAll() {
-      opinionRepository.deleteAll();
-      purchaseRepository.deleteAll();
-      productRepository.deleteAll();
-      producerRepository.deleteAll();
-      customerRepository.deleteAll();
-   }
+  @Transactional
+  public void deleteAll() {
+    opinionRepository.deleteAll();
+    purchaseRepository.deleteAll();
+    productRepository.deleteAll();
+    producerRepository.deleteAll();
+    customerRepository.deleteAll();
+  }
 }

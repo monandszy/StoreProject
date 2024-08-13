@@ -14,20 +14,20 @@ import java.time.OffsetDateTime;
 @Builder
 @With
 public class Opinion {
-   Integer id;
-   Customer customer;
-   Product product;
-   int stars;
-   String comment;
-   OffsetDateTime timeOfComment;
+  Integer id;
+  Customer customer;
+  Product product;
+  int stars;
+  String comment;
+  OffsetDateTime timeOfComment;
 
-   public String[] getParams() {
-      return new String[]{
-              "" + customer.getId(),
-              "" + product.getId(),
-              "" + stars,
-              comment,
-              timeOfComment.toString()
-      };
-   }
+  public String[] getParams() {
+    return new String[]{
+      "" + customer.getId(),
+      "" + product.getId(),
+      "" + stars,
+      comment,
+      timeOfComment.toString()
+    };
+  }
 }

@@ -14,18 +14,18 @@ import java.time.OffsetDateTime;
 @Builder
 @With
 public class Purchase {
-   Integer id;
-   Customer customer;
-   Product product;
-   int quantity;
-   OffsetDateTime timeOfPurchase;
+  Integer id;
+  Customer customer;
+  Product product;
+  int quantity;
+  OffsetDateTime timeOfPurchase;
 
-   public String[] getParams() {
-      return new String[]{
-              "" + customer.getId(),
-              "" + product.getId(),
-              "" + quantity,
-              timeOfPurchase.toString()
-      };
-   }
+  public String[] getParams() {
+    return new String[]{
+      "" + customer.getId(),
+      "" + product.getId(),
+      "" + quantity,
+      timeOfPurchase.toString()
+    };
+  }
 }

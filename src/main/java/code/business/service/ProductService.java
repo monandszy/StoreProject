@@ -14,15 +14,15 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductService {
 
-   private final ProductRepository productRepository;
-   private final PurchaseRepository purchaseRepository;
-   private final OpinionRepository opinionRepository;
+  private final ProductRepository productRepository;
+  private final PurchaseRepository purchaseRepository;
+  private final OpinionRepository opinionRepository;
 
-   @Transactional
-   void deleteQuestionableProducts() {
-      List<Integer> list = productRepository.getQuestionableProducts().stream().map(Product::getId).toList();
-      opinionRepository.deleteWherePropertyIn("product_id", list);
-      purchaseRepository.deleteWherePropertyIn("product_id", list);
-      productRepository.deleteWhereIdIn(list);
-   }
+  @Transactional
+  void deleteQuestionableProducts() {
+    List<Integer> list = productRepository.getQuestionableProducts().stream().map(Product::getId).toList();
+    opinionRepository.deleteWherePropertyIn("product_id", list);
+    purchaseRepository.deleteWherePropertyIn("product_id", list);
+    productRepository.deleteWhereIdIn(list);
+  }
 }

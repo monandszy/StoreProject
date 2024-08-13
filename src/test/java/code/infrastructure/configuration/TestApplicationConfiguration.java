@@ -24,35 +24,35 @@ import org.springframework.transaction.support.TransactionTemplate;
 @EnableTransactionManagement
 public class TestApplicationConfiguration {
 
-   private final Environment environment;
+  private final Environment environment;
 
-   @Bean
-   public SimpleDriverDataSource databaseDataSource() {
-      SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-      dataSource.setDriver(new Driver());
-      dataSource.setUrl(environment.getProperty("jdbc.url"));
-      dataSource.setUsername(environment.getProperty("jdbc.user"));
-      dataSource.setPassword(environment.getProperty("jdbc.pass"));
-      dataSource.setSchema(environment.getProperty("jdbc.schema"));
-      return dataSource;
-   }
+  @Bean
+  public SimpleDriverDataSource databaseDataSource() {
+    SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+    dataSource.setDriver(new Driver());
+    dataSource.setUrl(environment.getProperty("jdbc.url"));
+    dataSource.setUsername(environment.getProperty("jdbc.user"));
+    dataSource.setPassword(environment.getProperty("jdbc.pass"));
+    dataSource.setSchema(environment.getProperty("jdbc.schema"));
+    return dataSource;
+  }
 
-   @Bean(initMethod = "migrate")
-   Flyway flyway() {
-      ClassicConfiguration configuration = new ClassicConfiguration();
-      configuration.setBaselineOnMigrate(true);
-      configuration.setLocations(new Location("filesystem:src/main/resources/database/migrations"));
-      configuration.setDataSource(databaseDataSource());
-      return new Flyway(configuration);
-   }
+  @Bean(initMethod = "migrate")
+  Flyway flyway() {
+    ClassicConfiguration configuration = new ClassicConfiguration();
+    configuration.setBaselineOnMigrate(true);
+    configuration.setLocations(new Location("filesystem:src/main/resources/database/migrations"));
+    configuration.setDataSource(databaseDataSource());
+    return new Flyway(configuration);
+  }
 
-   @Bean
-   PlatformTransactionManager txManager() {
-      return new DataSourceTransactionManager(databaseDataSource());
-   }
+  @Bean
+  PlatformTransactionManager txManager() {
+    return new DataSourceTransactionManager(databaseDataSource());
+  }
 
-   @Bean
-   public TransactionTemplate transactionTemplate() {
-      return new TransactionTemplate(txManager());
-   }
+  @Bean
+  public TransactionTemplate transactionTemplate() {
+    return new TransactionTemplate(txManager());
+  }
 }

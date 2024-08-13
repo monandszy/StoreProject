@@ -14,15 +14,15 @@ import java.util.List;
 @AllArgsConstructor
 public class CustomerService {
 
-   private final CustomerRepository customerRepository;
-   private final OpinionRepository opinionRepository;
-   private final PurchaseRepository purchaseRepository;
+  private final CustomerRepository customerRepository;
+  private final OpinionRepository opinionRepository;
+  private final PurchaseRepository purchaseRepository;
 
-   @Transactional
-   void deleteCustomersWhereAgeBelow16() {
-      List<Integer> whereAgeBelowIds = customerRepository.getWhereAgeBelow(16).stream().map(Customer::getId).toList();
-      opinionRepository.deleteWherePropertyIn("customer_id", whereAgeBelowIds);
-      purchaseRepository.deleteWherePropertyIn("customer_id", whereAgeBelowIds);
-      customerRepository.deleteWhereIdIn(whereAgeBelowIds);
-   }
+  @Transactional
+  void deleteCustomersWhereAgeBelow16() {
+    List<Integer> whereAgeBelowIds = customerRepository.getWhereAgeBelow(16).stream().map(Customer::getId).toList();
+    opinionRepository.deleteWherePropertyIn("customer_id", whereAgeBelowIds);
+    purchaseRepository.deleteWherePropertyIn("customer_id", whereAgeBelowIds);
+    customerRepository.deleteWhereIdIn(whereAgeBelowIds);
+  }
 }

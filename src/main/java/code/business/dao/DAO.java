@@ -5,15 +5,15 @@ import java.util.Optional;
 
 public interface DAO<T> {
 
-   Integer add(T t);
+  Integer add(T t);
 
-   Optional<T> getById(Integer id);
+  Optional<T> getById(Integer id);
 
-   T updateWhereId(Integer id, String[] params);
+  T updateWhereId(Integer id, String[] params);
 
-   void deleteById(Integer id);
+  void deleteById(Integer id);
 
-   void deleteAll();
+  void deleteAll();
 
-   List<T> getAll();
+  List<T> getAll();
 }

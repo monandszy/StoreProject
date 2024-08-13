@@ -8,15 +8,14 @@ import lombok.With;
 @Builder
 @With
 public class Producer {
-   Integer id;
-   String name;
-   String address;
+  Integer id;
+  String name;
+  String address;
 
-
-   public String[] getParams() {
-      return new String[]{
-              name,
-              address
-      };
-   }
+  public String[] getParams() {
+    return new String[]{
+      name,
+      address
+    };
+  }
 }

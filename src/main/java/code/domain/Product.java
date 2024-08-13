@@ -14,22 +14,22 @@ import java.math.BigDecimal;
 @Builder
 @With
 public class Product {
-   Integer id;
-   String code;
-   String name;
-   BigDecimal price;
-   boolean adultsOnly;
-   String description;
-   Producer producer;
+  Integer id;
+  String code;
+  String name;
+  BigDecimal price;
+  boolean adultsOnly;
+  String description;
+  Producer producer;
 
-   public String[] getParams() {
-      return new String[]{
-              code,
-              name,
-              price.toString(),
-              "" + adultsOnly,
-              description,
-              "" + producer.getId()
-      };
-   }
+  public String[] getParams() {
+    return new String[]{
+      code,
+      name,
+      price.toString(),
+      "" + adultsOnly,
+      description,
+      "" + producer.getId()
+    };
+  }
 }
